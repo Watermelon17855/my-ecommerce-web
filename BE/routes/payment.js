@@ -5,7 +5,7 @@ const Order = require('../models/Order');
 // 1. API TẠO ĐƠN HÀNG (Dùng khi khách nhấn "Thanh toán")
 router.post('/create-order', async (req, res) => {
     const { userId, items, totalAmount } = req.body;
-    const orderCode = `DH${Date.now()}`; // Tạo mã duy nhất dựa trên thời gian
+    const orderCode = `ORD${Date.now()}`; // Tạo mã duy nhất dựa trên thời gian
 
     try {
         const newOrder = await Order.create({
