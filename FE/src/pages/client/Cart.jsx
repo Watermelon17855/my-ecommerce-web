@@ -94,13 +94,13 @@ const Cart = () => {
 
                                     <span className="font-bold w-8 text-center">{item.quantity}</span>
 
-                                    <button
+                                    {/* <button
                                         // 5. THÊM NÚT TĂNG: Tăng số lượng thêm 1
                                         onClick={() => updateQuantity(item._id, item.quantity + 1)}
                                         className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-all"
                                     >
                                         <Plus className="w-4 h-4" />
-                                    </button>
+                                    </button> */}
                                 </div>
                             </div>
                             <button

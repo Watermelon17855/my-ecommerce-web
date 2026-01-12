@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Cart = require('../models/Cart');
 
 // 1. API TẠO ĐƠN HÀNG (Dùng khi khách nhấn "Thanh toán")
 router.post('/create-order', async (req, res) => {
@@ -23,22 +24,26 @@ router.post('/create-order', async (req, res) => {
 
 // 2. WEBHOOK NHẬN DỮ LIỆU TỪ SEPAY
 router.post('/sepay-webhook', async (req, res) => {
-    console.log("Dữ liệu SePay gửi tới:", req.body); // Quan trọng: Xem log trên Render để biết SePay gửi gì
+    console.log("Dữ liệu SePay gửi tới:", req.body);
     const { content, transferAmount } = req.body;
 
     try {
-        // Thêm cờ 'i' để không phân biệt ORD hay ord
         const orderCodeMatch = content.match(/ORD\d+/i);
-        const orderCode = orderCodeMatch ? orderCodeMatch[0].toUpperCase() : null; // Chuyển về hoa để khớp DB
+        const orderCode = orderCodeMatch ? orderCodeMatch[0].toUpperCase() : null;
 
         if (orderCode) {
             const order = await Order.findOne({ orderCode });
-            console.log("Tìm thấy đơn hàng trong DB:", order);
 
             if (order && order.paymentStatus === 'pending' && transferAmount >= order.totalAmount) {
+                // CẬP NHẬT ĐƠN HÀNG
                 order.paymentStatus = 'paid';
                 await order.save();
-                console.log("Cập nhật trạng thái PAID thành công!");
+
+                // --- ĐÂY LÀ CHỖ QUAN TRỌNG: XÓA GIỎ HÀNG NGAY LẬP TỨC ---
+                // Vì trong đơn hàng (order) đã có lưu userId rồi
+                await Cart.deleteMany({ userId: order.userId });
+
+                console.log(`✅ Đã thanh toán & Xóa giỏ hàng cho user: ${order.userId}`);
                 return res.status(200).json({ success: true });
             }
         }
