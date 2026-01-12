@@ -30,11 +30,12 @@ const Cart = () => {
 
         // 4. Gọi API tạo đơn hàng
         try {
+            console.log("Dữ liệu gửi lên server:", { userId: user._id, items: cartItems });
             const response = await fetch("https://my-ecommerce-web-rlmf.onrender.com/api/payment/create-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    userId: user._id, // Bây giờ user._id sẽ không còn bị undefined nữa
+                    userId: user._id || user.id, // Bây giờ user._id sẽ không còn bị undefined nữa
                     items: cartItems,
                     totalAmount: totalPrice,
                 }),

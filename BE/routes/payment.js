@@ -7,6 +7,7 @@ const Cart = require('../models/Cart');
 router.post('/create-order', async (req, res) => {
     const { userId, items, totalAmount } = req.body;
     const orderCode = `ORD${Date.now()}`; // Tạo mã duy nhất dựa trên thời gian
+    console.log(">>> Backend nhận được userId từ FE:", userId);
 
     try {
         const newOrder = await Order.create({
