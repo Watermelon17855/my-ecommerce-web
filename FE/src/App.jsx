@@ -6,6 +6,7 @@ import { CartProvider } from './context/CartContext';
 import Cart from './pages/client/Cart';
 import Login from './pages/client/Login';
 import Register from './pages/client/Register';
+import Checkout from './pages/client/Checkout';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
           </Routes>
         </div>
       </Router>

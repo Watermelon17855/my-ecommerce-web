@@ -1,17 +1,33 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const API_URL = "https://my-ecommerce-web-rlmf.onrender.com"; // Link Render của bạn
+const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
 
-const Checkout = ({ orderData }) => {
+const Checkout = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
     const [status, setStatus] = useState('pending');
 
-    // 1. Tạo Link QR SePay (Thay STK và Ngân hàng của bạn vào đây)
+    // Lấy dữ liệu từ state được truyền sang
+    const orderData = location.state?.orderData;
+
+    // 1. Kiểm tra nếu không có dữ liệu đơn hàng thì không cho vào trang này
+    useEffect(() => {
+        if (!orderData) {
+            alert("Không tìm thấy thông tin đơn hàng. Vui lòng thử lại!");
+            navigate('/cart'); // Quay lại giỏ hàng
+        }
+    }, [orderData, navigate]);
+
+    // Nếu đang redirect hoặc thiếu dữ liệu thì không render nội dung bên dưới
+    if (!orderData) return <div className="text-center p-10">Đang tải dữ liệu đơn hàng...</div>;
+
+    // 2. Tạo Link QR SePay
     const qrUrl = `https://qr.sepay.vn/img?acc=0388100173&bank=VPBank&amount=${orderData.totalAmount}&des=${orderData.orderCode}`;
 
     useEffect(() => {
         if (status === 'paid') return;
 
-        // 2. Cứ mỗi 3 giây gọi API hỏi xem đã nhận được tiền chưa
         const checkInterval = setInterval(async () => {
             try {
                 const res = await fetch(`${API_URL}/api/payment/check-status/${orderData.orderCode}`);
@@ -19,7 +35,7 @@ const Checkout = ({ orderData }) => {
 
                 if (data.status === 'paid') {
                     setStatus('paid');
-                    clearInterval(checkInterval); // Dừng hỏi khi đã trả tiền
+                    clearInterval(checkInterval);
                 }
             } catch (err) {
                 console.error("Lỗi kiểm tra:", err);
@@ -34,16 +50,24 @@ const Checkout = ({ orderData }) => {
             {status === 'pending' ? (
                 <>
                     <h2 className="text-2xl font-bold mb-4">Quét mã để thanh toán 💳</h2>
-                    <img src={qrUrl} alt="QR Thanh toán" className="mx-auto border-4 border-gray-100 rounded-xl" />
-                    <p className="mt-4 text-gray-600">Nội dung chuyển khoản: <b>{orderData.orderCode}</b></p>
-                    <div className="mt-4 animate-pulse text-blue-500">Đang chờ bạn thanh toán...</div>
+                    <div className="bg-white p-4 inline-block rounded-2xl shadow-sm border">
+                        <img src={qrUrl} alt="QR Thanh toán" className="mx-auto rounded-xl" />
+                    </div>
+                    <p className="mt-4 text-lg">Số tiền: <b className="text-red-600">{orderData.totalAmount.toLocaleString()} VNĐ</b></p>
+                    <p className="mt-2 text-gray-600">Nội dung chuyển khoản: <b>{orderData.orderCode}</b></p>
+                    <div className="mt-6 animate-pulse text-blue-500 font-medium">🔄 Hệ thống đang chờ bạn thanh toán...</div>
                 </>
             ) : (
-                <div className="bg-green-100 p-10 rounded-3xl">
-                    <h2 className="text-4xl">🎉</h2>
+                <div className="bg-green-100 p-10 rounded-3xl max-w-md mx-auto">
+                    <h2 className="text-5xl mb-4">🎉</h2>
                     <h2 className="text-2xl font-bold text-green-700">Thanh toán thành công!</h2>
-                    <p>Đơn hàng của bạn đang được xử lý.</p>
-                    <button onClick={() => window.location.href = '/'} className="mt-6 bg-green-600 text-white px-6 py-2 rounded-full">Quay về trang chủ</button>
+                    <p className="text-green-600 mt-2">Đơn hàng của bạn đang được xử lý.</p>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="mt-6 bg-green-600 text-white px-8 py-3 rounded-full font-bold hover:bg-green-700 transition-all"
+                    >
+                        Quay về trang chủ
+                    </button>
                 </div>
             )}
         </div>

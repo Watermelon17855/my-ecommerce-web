@@ -13,7 +13,7 @@ router.post('/create-order', async (req, res) => {
             items,
             totalAmount,
             orderCode,
-            status: 'pending'
+            paymentStatus: 'pending'
         });
         res.status(201).json(newOrder);
     } catch (err) {
@@ -30,8 +30,8 @@ router.post('/sepay-webhook', async (req, res) => {
 
         if (orderCode) {
             const order = await Order.findOne({ orderCode });
-            if (order && order.status === 'pending' && transferAmount >= order.totalAmount) {
-                order.status = 'paid';
+            if (order && order.paymentStatus === 'pending' && transferAmount >= order.totalAmount) {
+                order.paymentStatus = 'paid';
                 await order.save();
                 return res.status(200).json({ success: true });
             }
@@ -43,12 +43,12 @@ router.post('/sepay-webhook', async (req, res) => {
 });
 
 // 3. API KIỂM TRA TRẠNG THÁI ĐƠN HÀNG (Dùng cho FE gọi liên tục)
-router.get('/check-status/:orderCode', async (req, res) => {
+router.get('/check-paymentStatus/:orderCode', async (req, res) => {
     try {
         const order = await Order.findOne({ orderCode: req.params.orderCode });
-        res.json({ status: order ? order.status : 'not_found' });
+        res.json({ paymentStatus: order ? order.paymentStatus : 'not_found' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.paymentStatus(500).json({ message: err.message });
     }
 });
 
