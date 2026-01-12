@@ -14,37 +14,44 @@ const Shipping = () => {
     const handleConfirmOrder = async (e) => {
         e.preventDefault();
         const user = JSON.parse(localStorage.getItem('user'));
+        const userId = user?._id || user?.id;
+
+        const orderPayload = {
+            userId,
+            ...formData,
+            items: cartItems,
+            totalAmount: totalPrice,
+            paymentMethod: paymentMethod // 'cash' hoặc 'transfer'
+        };
 
         try {
             const response = await fetch("https://my-ecommerce-web-rlmf.onrender.com/api/payment/create-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    userId: user._id,
-                    ...formData,
-                    items: cartItems,
-                    totalAmount: totalPrice,
-                    paymentMethod: paymentMethod // Gửi phương thức đã chọn
-                }),
+                body: JSON.stringify(orderPayload),
             });
 
             if (response.ok) {
                 const savedOrder = await response.json();
 
-                // LOGIC RẼ NHÁNH TẠI ĐÂY
                 if (paymentMethod === 'transfer') {
-                    // Nếu là chuyển khoản -> Qua trang quét mã QR
+                    // Nếu chuyển khoản: Sang trang quét mã (Webhook sẽ xóa giỏ sau)
                     navigate('/checkout', { state: { orderData: savedOrder } });
                 } else {
-                    // Nếu là tiền mặt -> Thông báo thành công & Xóa giỏ hàng luôn
-                    await fetch(`https://my-ecommerce-web-rlmf.onrender.com/api/cart/clear/${user._id}`, { method: 'DELETE' });
-                    await fetchCart(); // Cập nhật icon giỏ hàng về 0
-                    alert("🎉 Cảm ơn bạn đã đặt hàng! Đơn hàng sẽ được thanh toán khi nhận hàng (COD).");
-                    navigate('/'); // Quay về trang chủ
+                    // --- NẾU LÀ TIỀN MẶT (COD): PHẢI XÓA GIỎ NGAY TẠI ĐÂY ---
+                    const clearRes = await fetch(`https://my-ecommerce-web-rlmf.onrender.com/api/cart/clear/${userId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (clearRes.ok) {
+                        await fetchCart(); // 1. Cập nhật lại Icon giỏ hàng trên Navbar về 0
+                        alert("🎉 Đặt hàng thành công! Đơn hàng sẽ được thanh toán khi nhận hàng."); // 2. Thông báo
+                        navigate('/'); // 3. Về trang chủ
+                    }
                 }
             }
         } catch (error) {
-            console.error("Lỗi:", error);
+            console.error("Lỗi đặt hàng COD:", error);
         }
     };
 

@@ -53,18 +53,10 @@ router.post('/add', async (req, res) => {
 router.delete('/clear/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-
-        // Cách 1: Xóa hẳn cái giỏ hàng của user đó luôn
-        const result = await Cart.findOneAndDelete({ userId });
-
-        if (result) {
-            console.log(`✅ Đã dọn sạch giỏ hàng cho user: ${userId}`);
-            res.status(200).json({ message: "Giỏ hàng đã được làm trống!" });
-        } else {
-            res.status(404).json({ message: "Không tìm thấy giỏ hàng để xóa" });
-        }
+        // Xóa giỏ hàng dựa trên userId
+        await Cart.deleteOne({ userId: userId });
+        res.status(200).json({ message: "Đã dọn sạch giỏ hàng COD" });
     } catch (err) {
-        console.error("Lỗi xóa sạch giỏ hàng:", err);
         res.status(500).json({ message: err.message });
     }
 });
