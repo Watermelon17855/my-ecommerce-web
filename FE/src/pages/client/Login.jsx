@@ -1,6 +1,7 @@
-import { useState } from 'react';
+
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from "../../context/CartContext";
+import { useState, useEffect } from 'react';
 
 const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
 
@@ -8,6 +9,14 @@ const Login = () => {
     const { fetchCart } = useCart();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const navigate = useNavigate();
+
+    // KIỂM TRA NẾU ĐÃ CÓ TOKEN THÌ ĐẨY VỀ HOME NGAY
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            navigate('/');
+        }
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -18,13 +27,18 @@ const Login = () => {
                 body: JSON.stringify(formData),
             });
             const data = await response.json();
+
             if (response.ok) {
-                localStorage.setItem('token', data.token); // Lưu vé thông hành
-                localStorage.setItem('user', JSON.stringify(data.user)); // Lưu thông tin user
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
                 alert("Chào mừng quay trở lại!");
+
+                // Cập nhật giỏ hàng của user vừa đăng nhập
                 await fetchCart();
+
+                // DÙNG CÁCH NÀY ĐỂ NAVBAR CẬP NHẬT MÀ KHÔNG BỊ FLASH TRANG
                 window.location.href = "/";
-                window.location.reload(); // Reload để Navbar cập nhật trạng thái
             } else {
                 alert(data.message);
             }

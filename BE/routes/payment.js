@@ -5,19 +5,14 @@ const Cart = require('../models/Cart');
 
 // 1. API TẠO ĐƠN HÀNG (Dùng khi khách nhấn "Thanh toán")
 router.post('/create-order', async (req, res) => {
-    // Nhận thêm fullname, phone, address từ Frontend gửi lên
-    const { userId, items, totalAmount, fullname, phone, address } = req.body;
+    // Nhận thêm paymentMethod từ Frontend
+    const { userId, items, totalAmount, fullname, phone, address, paymentMethod } = req.body;
     const orderCode = `ORD${Date.now()}`;
 
     try {
         const newOrder = await Order.create({
-            userId,
-            fullname,
-            phone,
-            address,
-            items,
-            totalAmount,
-            orderCode,
+            userId, fullname, phone, address, items, totalAmount, orderCode,
+            paymentMethod // Lưu phương thức khách chọn
         });
         res.status(201).json(newOrder);
     } catch (err) {

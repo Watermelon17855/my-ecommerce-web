@@ -7,7 +7,9 @@ const orderSchema = new mongoose.Schema({
     address: { type: String, required: true },
     items: Array,
     totalAmount: Number,
-    paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+    // paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+    paymentMethod: { type: String, enum: ['cash', 'transfer'], required: true },
+    paymentStatus: { type: String, default: 'pending' },
     orderCode: { type: String, unique: true }, // Mã đơn hàng để khách ghi vào nội dung chuyển khoản
 }, { timestamps: true });
 
