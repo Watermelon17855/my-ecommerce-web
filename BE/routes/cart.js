@@ -50,17 +50,21 @@ router.post('/add', async (req, res) => {
 });
 
 // 1. Xóa toàn bộ một sản phẩm khỏi giỏ (Icon xọt rác)
-router.delete('/remove/:userId/:productId', async (req, res) => {
+router.delete('/clear/:userId', async (req, res) => {
     try {
-        const { userId, productId } = req.params;
-        const cart = await Cart.findOneAndUpdate(
-            { userId },
-            { $pull: { products: { productId: productId } } }, // Xóa phần tử có productId này
-            { new: true }
-        ).populate('products.productId');
+        const { userId } = req.params;
 
-        res.status(200).json(cart || { products: [] });
+        // Cách 1: Xóa hẳn cái giỏ hàng của user đó luôn
+        const result = await Cart.findOneAndDelete({ userId });
+
+        if (result) {
+            console.log(`✅ Đã dọn sạch giỏ hàng cho user: ${userId}`);
+            res.status(200).json({ message: "Giỏ hàng đã được làm trống!" });
+        } else {
+            res.status(404).json({ message: "Không tìm thấy giỏ hàng để xóa" });
+        }
     } catch (err) {
+        console.error("Lỗi xóa sạch giỏ hàng:", err);
         res.status(500).json({ message: err.message });
     }
 });
