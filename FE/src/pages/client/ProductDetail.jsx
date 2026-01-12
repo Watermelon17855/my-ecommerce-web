@@ -2,6 +2,8 @@ import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 
+const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
+
 const ProductDetail = () => {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
@@ -11,7 +13,7 @@ const ProductDetail = () => {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const response = await fetch(`http://localhost:5001/api/products/${id}`);
+                const response = await fetch(`${API_URL}/api/products/${id}`);
                 if (!response.ok) throw new Error("Không tìm thấy sản phẩm");
                 const data = await response.json();
                 setProduct(data);

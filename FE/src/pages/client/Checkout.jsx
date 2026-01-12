@@ -1,22 +1,53 @@
-const Checkout = ({ totalAmount, orderCode }) => {
-    // Thông tin ngân hàng của bạn
-    const MY_BANK = {
-        BANK_ID: "MB", // Ví dụ Quân Đội MBBank
-        ACCOUNT_NO: "123456789",
-        ACCOUNT_NAME: "NGUYEN VAN A"
-    };
+import { useState, useEffect } from 'react';
 
-    // Link tạo QR tự động theo chuẩn VietQR
-    const qrUrl = `https://img.vietqr.io/image/${MY_BANK.BANK_ID}-${MY_BANK.ACCOUNT_NO}-compact2.png?amount=${totalAmount}&addInfo=${orderCode}&accountName=${MY_BANK.ACCOUNT_NAME}`;
+const API_URL = "https://my-ecommerce-web-rlmf.onrender.com"; // Link Render của bạn
+
+const Checkout = ({ orderData }) => {
+    const [status, setStatus] = useState('pending');
+
+    // 1. Tạo Link QR SePay (Thay STK và Ngân hàng của bạn vào đây)
+    const qrUrl = `https://qr.sepay.vn/img?acc=0388100173&bank=VPBank&amount=${orderData.totalAmount}&des=${orderData.orderCode}`;
+
+    useEffect(() => {
+        if (status === 'paid') return;
+
+        // 2. Cứ mỗi 3 giây gọi API hỏi xem đã nhận được tiền chưa
+        const checkInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/payment/check-status/${orderData.orderCode}`);
+                const data = await res.json();
+
+                if (data.status === 'paid') {
+                    setStatus('paid');
+                    clearInterval(checkInterval); // Dừng hỏi khi đã trả tiền
+                }
+            } catch (err) {
+                console.error("Lỗi kiểm tra:", err);
+            }
+        }, 3000);
+
+        return () => clearInterval(checkInterval);
+    }, [orderData.orderCode, status]);
 
     return (
-        <div className="text-center p-10 bg-white rounded-2xl shadow-lg">
-            <h2 className="text-2xl font-bold mb-4">Quét mã để thanh toán</h2>
-            <img src={qrUrl} alt="QR Thanh Toan" className="mx-auto w-64 h-64 border p-2" />
-            <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg">
-                <p>Nội dung chuyển khoản: <span className="font-bold text-red-600">{orderCode}</span></p>
-                <p className="text-sm font-medium mt-1">(Vui lòng ghi đúng nội dung để hệ thống tự động xác nhận)</p>
-            </div>
+        <div className="text-center p-10">
+            {status === 'pending' ? (
+                <>
+                    <h2 className="text-2xl font-bold mb-4">Quét mã để thanh toán 💳</h2>
+                    <img src={qrUrl} alt="QR Thanh toán" className="mx-auto border-4 border-gray-100 rounded-xl" />
+                    <p className="mt-4 text-gray-600">Nội dung chuyển khoản: <b>{orderData.orderCode}</b></p>
+                    <div className="mt-4 animate-pulse text-blue-500">Đang chờ bạn thanh toán...</div>
+                </>
+            ) : (
+                <div className="bg-green-100 p-10 rounded-3xl">
+                    <h2 className="text-4xl">🎉</h2>
+                    <h2 className="text-2xl font-bold text-green-700">Thanh toán thành công!</h2>
+                    <p>Đơn hàng của bạn đang được xử lý.</p>
+                    <button onClick={() => window.location.href = '/'} className="mt-6 bg-green-600 text-white px-6 py-2 rounded-full">Quay về trang chủ</button>
+                </div>
+            )}
         </div>
     );
 };
+
+export default Checkout;

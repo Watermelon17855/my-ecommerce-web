@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from "../../context/CartContext";
 
+const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
+
 const Login = () => {
     const { fetchCart } = useCart();
     const [formData, setFormData] = useState({ email: '', password: '' });
@@ -10,7 +12,7 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:5001/api/auth/login', {
+            const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),

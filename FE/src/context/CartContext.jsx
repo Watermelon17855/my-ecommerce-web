@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 
 const CartContext = createContext();
+const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
 
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
@@ -17,7 +18,7 @@ export const CartProvider = ({ children }) => {
 
         if (userId) {
             try {
-                const response = await fetch(`http://localhost:5001/api/cart/${userId}`);
+                const response = await fetch(`${API_URL}/api/cart/${userId}`);
                 const data = await response.json();
                 if (response.ok && data && data.products) {
                     const formattedCart = data.products
@@ -50,7 +51,7 @@ export const CartProvider = ({ children }) => {
         const userId = user._id || user.id;
 
         try {
-            const response = await fetch('http://localhost:5001/api/cart/add', {
+            const response = await fetch(`${API_URL}/api/cart/add`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, productId: product._id, quantity: 1 }),
@@ -78,7 +79,7 @@ export const CartProvider = ({ children }) => {
         const userId = user._id || user.id;
 
         try {
-            const response = await fetch(`http://localhost:5001/api/cart/remove/${userId}/${productId}`, {
+            const response = await fetch(`${API_URL}/api/cart/remove/${userId}/${productId}`, {
                 method: 'DELETE',
             });
 
@@ -94,13 +95,13 @@ export const CartProvider = ({ children }) => {
 
     // --- 4. CẬP NHẬT SỐ LƯỢNG (Nút trừ - Dùng API /add hoặc /decrease) ---
     const updateQuantity = async (productId, amount) => {
-        if (amount !== -1) return;
+        if (amount <= 1) return;
 
         const userData = JSON.parse(localStorage.getItem('user'));
         const userId = userData?._id || userData?.id;
 
         try {
-            const response = await fetch('http://localhost:5001/api/cart/decrease', {
+            const response = await fetch(`${API_URL}/api/cart/decrease`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, productId }),

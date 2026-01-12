@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import ProductCard from "../../components/ProductCard";
 
+const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
+
 const Home = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -8,7 +10,7 @@ const Home = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/products');
+                const response = await fetch(`${API_URL}/api/products`);
                 const data = await response.json();
                 setProducts(data);
                 setLoading(false);

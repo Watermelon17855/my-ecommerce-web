@@ -38,9 +38,16 @@ const Cart = () => {
 
                                 <div className="flex items-center space-x-3 mt-4">
                                     <button
+                                        disabled={item.quantity <= 1}
+
+                                        // 2. Thêm class để người dùng biết là không nhấn được (mờ đi + đổi chuột)
+                                        className={`p-2 rounded-lg transition-all ${item.quantity <= 1
+                                            ? "text-gray-300 cursor-not-allowed"
+                                            : "text-gray-600 hover:bg-gray-100"
+                                            }`}
                                         // 3. SỬA CHỖ NÀY: item.id -> item._id
-                                        onClick={() => updateQuantity(item._id, -1)}
-                                        className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200"
+                                        onClick={() => updateQuantity(item._id, item.quantity)}
+                                    //className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200"
                                     >
                                         <Minus className="w-4 h-4" />
                                     </button>
