@@ -25,7 +25,8 @@ router.post('/create-order', async (req, res) => {
 router.post('/sepay-webhook', async (req, res) => {
     const { content, transferAmount } = req.body;
     try {
-        const orderCodeMatch = content.match(/DH\d+/);
+        // Tìm mã bắt đầu bằng ORD thay vì DH
+        const orderCodeMatch = content.match(/ORD\d+/);
         const orderCode = orderCodeMatch ? orderCodeMatch[0] : null;
 
         if (orderCode) {

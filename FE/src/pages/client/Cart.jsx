@@ -12,39 +12,44 @@ const Cart = () => {
 
     // 3. LOGIC THANH TOÁN: Gửi dữ liệu lên Server rồi mới chuyển trang
     const handleCheckout = async () => {
-        if (cartItems.length === 0) return alert("Giỏ hàng của bạn đang trống!");
+        // 1. Lấy chuỗi JSON từ localStorage
+        const userData = localStorage.getItem('user');
 
-        // Chuẩn bị dữ liệu để gửi lên backend
-        const orderPayload = {
-            userId: user._id,
-            items: cartItems,
-            totalAmount: totalPrice,
-        };
+        // 2. Kiểm tra xem có dữ liệu không
+        if (!userData) {
+            alert("Vui lòng đăng nhập để tiếp tục thanh toán!");
+            navigate('/login');
+            return;
+        }
 
+        // 3. Chuyển chuỗi JSON thành Object (Lúc này biến 'user' mới thực sự tồn tại)
+        const user = JSON.parse(userData);
+        console.log("User đã đăng nhập nè:", user);
+
+        if (cartItems.length === 0) return alert("Giỏ hàng rỗng!");
+
+        // 4. Gọi API tạo đơn hàng
         try {
-            // 1. GỌI API ĐỂ TẠO ĐƠN HÀNG TRONG MONGODB
-            // Lưu ý: Dùng link Render của bạn đã deploy
             const response = await fetch("https://my-ecommerce-web-rlmf.onrender.com/api/payment/create-order", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(orderPayload),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: user._id, // Bây giờ user._id sẽ không còn bị undefined nữa
+                    items: cartItems,
+                    totalAmount: totalPrice,
+                }),
             });
 
             if (response.ok) {
                 const savedOrder = await response.json();
-                console.log("Đã tạo đơn hàng thành công trong MongoDB:", savedOrder);
-
-                // 2. CHUYỂN TRANG: Dùng dữ liệu THẬT từ server trả về (có mã DH và ID thật)
+                // Chuyển sang trang quét mã QR với dữ liệu thật từ DB
                 navigate('/checkout', { state: { orderData: savedOrder } });
             } else {
-                const errorData = await response.json();
-                alert(`Lỗi: ${errorData.message || "Không thể tạo đơn hàng"}`);
+                alert("Lỗi server khi tạo đơn hàng!");
             }
         } catch (error) {
-            console.error("Lỗi kết nối server:", error);
-            alert("Không thể kết nối đến server. Bạn đã bật server Backend chưa?");
+            console.error("Lỗi kết nối:", error);
+            alert("Không thể kết nối đến Backend!");
         }
     };
 
