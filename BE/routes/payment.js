@@ -4,6 +4,56 @@ const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const { isAdmin } = require('../middleware/authMiddleware');
 
+// routes/admin.js hoặc paymentRoutes.js
+
+router.get('/revenue-chart', isAdmin, async (req, res) => {
+    try {
+        const { from, to } = req.query;
+
+        // Chuyển đổi string sang Date object
+        const startDate = new Date(from);
+        const endDate = new Date(to);
+        endDate.setHours(23, 59, 59, 999); // Lấy đến cuối ngày của ngày kết thúc
+
+        const revenueData = await Order.aggregate([
+            {
+                $match: {
+                    paymentStatus: "paid",
+                    createdAt: { $gte: startDate, $lte: endDate }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                        method: "$paymentMethod"
+                    },
+                    total: { $sum: "$totalAmount" }
+                }
+            },
+            { $sort: { "_id.date": 1 } }
+        ]);
+
+        // Format lại dữ liệu để Recharts dễ đọc: 
+        // Từ [{_id: {date: '2026-01-13', method: 'cash'}, total: 500}, ...]
+        // Thành [{date: '2026-01-13', cash: 500, transfer: 1000}, ...]
+        const formattedData = {};
+        revenueData.forEach(item => {
+            const date = item._id.date;
+            const method = item._id.method === 'transfer' ? 'transfer' : 'cash';
+
+            if (!formattedData[date]) {
+                formattedData[date] = { date, cash: 0, transfer: 0 };
+            }
+            formattedData[date][method] = item.total;
+        });
+
+        res.status(200).json(Object.values(formattedData));
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // API lấy tất cả đơn hàng cho Admin
 router.get('/all-orders', isAdmin, async (req, res) => {
     try {
