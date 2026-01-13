@@ -3,6 +3,47 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { isAdmin } = require('../middleware/authMiddleware');
+
+// --- ĐOẠN DÀNH CHO ADMIN ---//
+
+// 1. Lấy tất cả người dùng (Chỉ Admin mới thấy)
+router.get('/all-users', isAdmin, async (req, res) => {
+    try {
+        // Lấy hết user nhưng không lấy mật khẩu (-password)
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
+        res.status(200).json(users);
+    } catch (err) {
+        res.status(500).json({ message: "Lỗi: " + err.message });
+    }
+});
+
+// 2. Xóa một người dùng
+router.delete('/:id', isAdmin, async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Đã xóa người dùng thành công!" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// 3. Cập nhật quyền Admin (Biến User thường thành Admin hoặc ngược lại)
+router.put('/toggle-admin/:id', isAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json("Không tìm thấy người dùng");
+
+        user.isAdmin = !user.isAdmin; // Đảo ngược trạng thái
+        await user.save();
+        res.status(200).json({ message: "Đã cập nhật quyền thành công", user });
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
+
+// --- ĐOẠN DÀNH CHO TẤT CẢ NGƯỜI DÙNG ---//
 
 // ĐĂNG KÝ
 router.post('/register', async (req, res) => {
