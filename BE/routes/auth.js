@@ -32,13 +32,19 @@ router.delete('/:id', isAdmin, async (req, res) => {
 router.put('/toggle-admin/:id', isAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json("Không tìm thấy người dùng");
+        if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
 
-        user.isAdmin = !user.isAdmin; // Đảo ngược trạng thái
+        // Ngăn Admin tự hạ cấp chính mình (Tránh việc tự nhốt mình ở ngoài)
+        if (req.user.id === req.params.id) {
+            return res.status(400).json({ message: "Bạn không thể tự hạ cấp chính mình!" });
+        }
+
+        user.isAdmin = !user.isAdmin; // Đảo ngược trạng thái isAdmin
         await user.save();
-        res.status(200).json({ message: "Đã cập nhật quyền thành công", user });
+
+        res.status(200).json({ message: "Cập nhật quyền thành công", isAdmin: user.isAdmin });
     } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({ message: err.message });
     }
 });
 
