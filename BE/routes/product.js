@@ -1,6 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
+const { isAdmin } = require('../middleware/authMiddleware');
+
+// ==========================================
+// 1. PUBLIC ROUTES (Ai cũng xem được)
+// ==========================================
+
 
 // API lấy tất cả sản phẩm từ Database
 router.get('/', async (req, res) => {
@@ -26,4 +32,43 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-module.exports = router; // CỰC KỲ QUAN TRỌNG: Phải có dòng này
+// ==========================================
+// 2. ADMIN ROUTES (Chỉ Admin mới có quyền)
+// ==========================================
+
+// THÊM SẢN PHẨM MỚI
+router.post('/', isAdmin, async (req, res) => {
+    try {
+        const newProduct = new Product(req.body); // Lấy data từ form Admin gửi lên
+        const savedProduct = await newProduct.save();
+        res.status(201).json(savedProduct);
+    } catch (err) {
+        res.status(500).json({ message: "Không thể thêm sản phẩm: " + err.message });
+    }
+});
+
+// CẬP NHẬT SẢN PHẨM (Sửa giá, sửa tên...)
+router.put('/:id', isAdmin, async (req, res) => {
+    try {
+        const updatedProduct = await Product.findByIdAndUpdate(
+            req.params.id,
+            { $set: req.body },
+            { new: true } // Trả về dữ liệu mới sau khi sửa
+        );
+        res.status(200).json(updatedProduct);
+    } catch (err) {
+        res.status(500).json({ message: "Lỗi khi cập nhật: " + err.message });
+    }
+});
+
+// XÓA SẢN PHẨM
+router.delete('/:id', isAdmin, async (req, res) => {
+    try {
+        await Product.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Đã xóa sản phẩm thành công!" });
+    } catch (err) {
+        res.status(500).json({ message: "Lỗi khi xóa: " + err.message });
+    }
+});
+
+module.exports = router; 

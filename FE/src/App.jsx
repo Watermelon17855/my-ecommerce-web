@@ -11,6 +11,7 @@ import Shipping from './pages/client/Shipping';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminProducts from './pages/admin/AdminProducts';
 
 
 function App() {
@@ -30,7 +31,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} /> {/* Trang mặc định /admin */}
               <Route path="orders" element={<AdminOrders />} /> {/* Trang /admin/orders */}
-
+              <Route path="products" element={<AdminProducts />} /> {/* Trang /admin/products */}
             </Route>
           </Routes>
         </div>
