@@ -3,16 +3,51 @@ import { DollarSign, ShoppingBag, Users, TrendingUp, Calendar } from 'lucide-rea
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const AdminDashboard = () => {
-    // 1. Khai báo State
+    // Lấy ngày hiện tại định dạng YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+
     const [stats, setStats] = useState({ totalRevenue: 0, totalOrders: 0, totalUsers: 0 });
     const [chartData, setChartData] = useState([]);
+
+    // Khởi tạo ngày bắt đầu là 7 ngày trước, ngày kết thúc là hôm nay
     const [from, setFrom] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-    const [to, setTo] = useState(new Date().toISOString().split('T')[0]);
+    const [to, setTo] = useState(today);
 
     const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
     const token = localStorage.getItem('token');
 
-    // 2. Hàm lấy dữ liệu thống kê (Thẻ Card)
+    // --- LOGIC RÀNG BUỘC NGÀY ---
+
+    const handleFromChange = (e) => {
+        const selectedFrom = e.target.value;
+        // 1. Không cho chọn quá ngày hiện tại (phòng hờ trên mobile/trình duyệt cũ)
+        if (selectedFrom > today) {
+            setFrom(today);
+            return;
+        }
+        setFrom(selectedFrom);
+
+        // 2. Nếu ngày bắt đầu mới > ngày kết thúc hiện tại, tự động đẩy ngày kết thúc lên bằng ngày bắt đầu
+        if (selectedFrom > to) {
+            setTo(selectedFrom);
+        }
+    };
+
+    const handleToChange = (e) => {
+        const selectedTo = e.target.value;
+        // 1. Không cho chọn trước ngày bắt đầu
+        if (selectedTo < from) {
+            alert("Ngày kết thúc không thể trước ngày bắt đầu!");
+            return;
+        }
+        // 2. Không cho chọn quá ngày hiện tại
+        if (selectedTo > today) {
+            setTo(today);
+            return;
+        }
+        setTo(selectedTo);
+    };
+
     const fetchStats = async () => {
         try {
             const res = await fetch(`${API_URL}/api/payment/stats`, {
@@ -23,7 +58,6 @@ const AdminDashboard = () => {
         } catch (err) { console.error("Lỗi lấy stats:", err); }
     };
 
-    // 3. Hàm lấy dữ liệu Biểu đồ
     const fetchChartData = async () => {
         try {
             const res = await fetch(`${API_URL}/api/payment/revenue-chart?from=${from}&to=${to}`, {
@@ -37,7 +71,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         fetchStats();
         fetchChartData();
-    }, [from, to]); // Khi đổi ngày, biểu đồ tự load lại
+    }, [from, to]);
 
     return (
         <div className="p-4 space-y-8">
@@ -45,7 +79,6 @@ const AdminDashboard = () => {
 
             {/* --- GRID THẺ THỐNG KÊ --- */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Thẻ Doanh thu */}
                 <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center space-x-4">
                     <div className="p-4 bg-blue-100 text-blue-600 rounded-2xl"><DollarSign size={28} /></div>
                     <div>
@@ -54,7 +87,6 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                {/* Thẻ Đơn hàng */}
                 <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center space-x-4">
                     <div className="p-4 bg-green-100 text-green-600 rounded-2xl"><ShoppingBag size={28} /></div>
                     <div>
@@ -63,7 +95,6 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                {/* Thẻ Khách hàng */}
                 <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center space-x-4">
                     <div className="p-4 bg-purple-100 text-purple-600 rounded-2xl"><Users size={28} /></div>
                     <div>
@@ -83,16 +114,28 @@ const AdminDashboard = () => {
                         <p className="text-sm text-gray-400">So sánh Tiền mặt vs Chuyển khoản</p>
                     </div>
 
-                    {/* Bộ chọn ngày */}
+                    {/* Bộ chọn ngày có ràng buộc */}
                     <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-2xl border border-gray-100">
                         <Calendar size={18} className="text-gray-400" />
-                        <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="bg-transparent border-none text-sm font-bold text-blue-600 focus:ring-0 cursor-pointer" />
+                        <input
+                            type="date"
+                            value={from}
+                            max={today} // Chặn chọn ngày tương lai
+                            onChange={handleFromChange}
+                            className="bg-transparent border-none text-sm font-bold text-blue-600 focus:ring-0 cursor-pointer"
+                        />
                         <span className="text-gray-400">→</span>
-                        <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="bg-transparent border-none text-sm font-bold text-blue-600 focus:ring-0 cursor-pointer" />
+                        <input
+                            type="date"
+                            value={to}
+                            min={from}  // Chặn chọn trước ngày bắt đầu
+                            max={today} // Chặn chọn ngày tương lai
+                            onChange={handleToChange}
+                            className="bg-transparent border-none text-sm font-bold text-blue-600 focus:ring-0 cursor-pointer"
+                        />
                     </div>
                 </div>
 
-                {/* Vùng vẽ biểu đồ */}
                 <div className="h-[400px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData}>
@@ -102,10 +145,7 @@ const AdminDashboard = () => {
                             <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
                             <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
 
-                            {/* Đường Chuyển khoản */}
                             <Line type="monotone" dataKey="transfer" name="Chuyển khoản" stroke="#3b82f6" strokeWidth={4} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 8 }} />
-
-                            {/* Đường Tiền mặt */}
                             <Line type="monotone" dataKey="cash" name="Tiền mặt (COD)" stroke="#f97316" strokeWidth={4} dot={{ r: 4, fill: '#f97316' }} activeDot={{ r: 8 }} />
                         </LineChart>
                     </ResponsiveContainer>

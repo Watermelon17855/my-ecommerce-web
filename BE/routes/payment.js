@@ -2,9 +2,36 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
+const User = require('../models/User');
 const { isAdmin } = require('../middleware/authMiddleware');
 
-// routes/admin.js hoặc paymentRoutes.js
+// API lấy các thông số tổng quát cho Dashboard
+router.get('/stats', isAdmin, async (req, res) => {
+    try {
+        // 1. Tính tổng doanh thu (Chỉ tính các đơn đã thanh toán)
+        const revenueData = await Order.aggregate([
+            { $match: { paymentStatus: "paid" } },
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+        ]);
+        const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
+
+        // 2. Đếm tổng số đơn hàng
+        const totalOrders = await Order.countDocuments();
+
+        // 3. Đếm tổng số thành viên (không phải admin)
+        const totalUsers = await User.countDocuments({ isAdmin: false });
+
+        res.status(200).json({
+            totalRevenue,
+            totalOrders,
+            totalUsers
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Lỗi lấy thống kê: " + err.message });
+    }
+});
+
+// API lấy dữ liệu doanh thu cho biểu đồ (Admin)
 
 router.get('/revenue-chart', isAdmin, async (req, res) => {
     try {
