@@ -2,6 +2,18 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
+const { isAdmin } = require('../middleware/authMiddleware');
+
+// API lấy tất cả đơn hàng cho Admin
+router.get('/all-orders', isAdmin, async (req, res) => {
+    try {
+        // Lấy tất cả, sắp xếp đơn mới nhất lên đầu (createdAt: -1)
+        const orders = await Order.find().sort({ createdAt: -1 });
+        res.status(200).json(orders);
+    } catch (err) {
+        res.status(500).json({ message: "Lỗi lấy danh sách đơn hàng" });
+    }
+});
 
 // 1. API TẠO ĐƠN HÀNG (Dùng khi khách nhấn "Thanh toán")
 router.post('/create-order', async (req, res) => {

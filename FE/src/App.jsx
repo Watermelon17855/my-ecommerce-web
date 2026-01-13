@@ -10,6 +10,7 @@ import Checkout from './pages/client/Checkout';
 import Shipping from './pages/client/Shipping';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminOrders from './pages/admin/AdminOrders';
 
 
 function App() {
@@ -28,7 +29,8 @@ function App() {
             <Route path="/shipping" element={<Shipping />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} /> {/* Trang mặc định /admin */}
-              {/* <Route path="orders" element={<AdminOrders />} /> Trang /admin/orders */}
+              <Route path="orders" element={<AdminOrders />} /> {/* Trang /admin/orders */}
+
             </Route>
           </Routes>
         </div>
