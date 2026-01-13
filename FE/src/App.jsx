@@ -8,6 +8,9 @@ import Login from './pages/client/Login';
 import Register from './pages/client/Register';
 import Checkout from './pages/client/Checkout';
 import Shipping from './pages/client/Shipping';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+
 
 function App() {
   return (
@@ -23,6 +26,10 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/shipping" element={<Shipping />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} /> {/* Trang mặc định /admin */}
+              {/* <Route path="orders" element={<AdminOrders />} /> Trang /admin/orders */}
+            </Route>
           </Routes>
         </div>
       </Router>
