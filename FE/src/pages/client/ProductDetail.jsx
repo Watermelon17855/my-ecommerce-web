@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 
-const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || "https://my-ecommerce-web-rlmf.onrender.com";
 
 const ProductDetail = () => {
     const { id } = useParams();

@@ -57,27 +57,40 @@ const Cart = () => {
                                 <p className="text-blue-600 font-bold">{item.price?.toLocaleString()}đ</p>
                                 <div className="flex items-center space-x-3 mt-4">
                                     <button
+                                        // Nút này sẽ bị khóa (mờ đi) nếu số lượng là 1 hoặc nhỏ hơn
                                         disabled={item.quantity <= 1}
                                         className={`p-2 rounded-lg transition-all ${item.quantity <= 1
                                             ? "text-gray-300 cursor-not-allowed"
                                             : "text-gray-600 hover:bg-gray-100"
                                             }`}
-                                        onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                                        onClick={() => {
+                                            // Chỉ thực hiện khi số lượng trên 1 (thêm một lớp bảo vệ nữa cho chắc)
+                                            if (item.quantity > 1) {
+                                                const isConfirmed = window.confirm("Bạn có muốn giảm số lượng sản phẩm này không?");
+                                                if (isConfirmed) {
+                                                    updateQuantity(item._id, item.quantity - 1);
+                                                }
+                                            }
+                                        }}
                                     >
                                         <Minus className="w-4 h-4" />
                                     </button>
                                     <span className="font-bold w-8 text-center">{item.quantity}</span>
-                                    <button
+                                    {/* <button
                                         onClick={() => updateQuantity(item._id, item.quantity + 1)}
                                         className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-all"
                                     >
                                         <Plus className="w-4 h-4" />
-                                    </button>
+                                    </button> */}
                                 </div>
                             </div>
                             <button
-                                onClick={() => removeFromCart(item._id)}
-                                className="ml-4 p-2 text-red-500 hover:bg-red-50 rounded-full"
+                                onClick={() => {
+                                    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng không? 😢")) {
+                                        removeFromCart(item._id);
+                                    }
+                                }}
+                                className="ml-4 p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                             >
                                 <Trash2 className="w-6 h-6" />
                             </button>

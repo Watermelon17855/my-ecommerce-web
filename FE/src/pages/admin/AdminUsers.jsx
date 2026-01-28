@@ -3,7 +3,7 @@ import { Trash2, ShieldCheck, ShieldAlert, User as UserIcon } from 'lucide-react
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
-    const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
+    const API_URL = import.meta.env.VITE_API_URL || "https://my-ecommerce-web-rlmf.onrender.com";
     const token = localStorage.getItem('token');
     const currentUser = JSON.parse(localStorage.getItem('user')); // Lấy thông tin admin đang đăng nhập
 

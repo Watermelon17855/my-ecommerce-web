@@ -13,6 +13,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminCategories from './pages/admin/AdminCategories';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
               <Route path="orders" element={<AdminOrders />} /> {/* Trang /admin/orders */}
               <Route path="products" element={<AdminProducts />} /> {/* Trang /admin/products */}
               <Route path="users" element={<AdminUsers />} /> {/* Trang /admin/users */}
+              <Route path="categories" element={<AdminCategories />} /> {/* Trang /admin/categories */}
             </Route>
           </Routes>
         </div>

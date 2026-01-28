@@ -1,10 +1,23 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 
 const CartContext = createContext();
-const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
+
+    // --- HÀM BỔ TRỢ: Chuẩn hóa dữ liệu giỏ hàng ---
+    // Giúp biến dữ liệu từ [{productId: {...}, quantity: 1}] thành [{_id: ..., name: ..., quantity: 1}]
+    const formatCartData = (products) => {
+        if (!products) return [];
+        return products
+            .filter(item => item.productId !== null) // Loại bỏ SP đã bị xóa khỏi DB
+            .map(item => ({
+                ...item.productId, // Lấy name, price, img, _id từ productId
+                quantity: item.quantity,
+                _id: item.productId._id // Đảm bảo _id là của sản phẩm
+            }));
+    };
 
     // --- 1. LẤY GIỎ HÀNG TỪ DB ---
     const fetchCart = async () => {
@@ -16,23 +29,14 @@ export const CartProvider = ({ children }) => {
         const user = JSON.parse(userData);
         const userId = user._id || user.id;
 
-        if (userId) {
-            try {
-                const response = await fetch(`${API_URL}/api/cart/${userId}`);
-                const data = await response.json();
-                if (response.ok && data && data.products) {
-                    const formattedCart = data.products
-                        .filter(item => item.productId !== null)
-                        .map(item => ({
-                            ...item.productId,
-                            quantity: item.quantity,
-                            _id: item.productId._id
-                        }));
-                    setCartItems(formattedCart);
-                }
-            } catch (error) {
-                console.error("Lỗi lấy giỏ hàng:", error);
+        try {
+            const response = await fetch(`${API_URL}/api/cart/${userId}`);
+            const data = await response.json();
+            if (response.ok && data && data.products) {
+                setCartItems(formatCartData(data.products)); // Dùng hàm chuẩn hóa
             }
+        } catch (error) {
+            console.error("Lỗi lấy giỏ hàng:", error);
         }
     };
 
@@ -40,7 +44,7 @@ export const CartProvider = ({ children }) => {
         fetchCart();
     }, []);
 
-    // --- 2. THÊM VÀO GIỎ HÀNG (Dùng API /add) ---
+    // --- 2. THÊM VÀO GIỎ HÀNG ---
     const addToCart = async (product) => {
         const userData = localStorage.getItem('user');
         if (!userData) {
@@ -58,20 +62,15 @@ export const CartProvider = ({ children }) => {
             });
 
             if (response.ok) {
-                setCartItems(prev => {
-                    const exist = prev.find(x => x._id === product._id);
-                    if (exist) {
-                        return prev.map(x => x._id === product._id ? { ...exist, quantity: exist.quantity + 1 } : x);
-                    }
-                    return [...prev, { ...product, quantity: 1 }];
-                });
+                // Sau khi thêm thành công, gọi lại fetchCart để đồng bộ dữ liệu chuẩn nhất từ Server
+                fetchCart();
             }
         } catch (error) {
-            console.error("Lỗi:", error);
+            console.error("Lỗi thêm giỏ hàng:", error);
         }
     };
 
-    // --- 3. XÓA VĨNH VIỄN SẢN PHẨM (Nút xọt rác - Dùng API DELETE) ---
+    // --- 3. XÓA SẢN PHẨM ---
     const removeFromCart = async (productId) => {
         const userData = localStorage.getItem('user');
         if (!userData) return;
@@ -79,46 +78,40 @@ export const CartProvider = ({ children }) => {
         const userId = user._id || user.id;
 
         try {
-            const response = await fetch(`${API_URL}/api/cart/remove/${userId}/${productId}`, {
-                method: 'DELETE',
+            const res = await fetch(`${API_URL}/api/cart/remove/${userId}/${productId}`, {
+                method: 'DELETE'
             });
-
-            if (response.ok) {
-                // Xóa trên giao diện sau khi DB đã xóa xong
-                setCartItems((prev) => prev.filter((item) => item._id !== productId));
-                console.log("Đã xóa vĩnh viễn sản phẩm khỏi Database");
+            if (res.ok) {
+                const data = await res.json();
+                // QUAN TRỌNG: Phải chuẩn hóa lại dữ liệu sau khi xóa
+                setCartItems(formatCartData(data.products));
             }
-        } catch (error) {
-            console.error("Lỗi xóa sản phẩm:", error);
-        }
+        } catch (err) { console.error("Lỗi xóa:", err); }
     };
 
-    // --- 4. CẬP NHẬT SỐ LƯỢNG (Nút trừ - Dùng API /add hoặc /decrease) ---
-    const updateQuantity = async (productId, amount) => {
-        if (amount <= 1) return;
+    // --- 4. CẬP NHẬT SỐ LƯỢNG ---
+    const updateQuantity = async (productId, newQuantity) => {
+        if (newQuantity < 1) return;
 
-        const userData = JSON.parse(localStorage.getItem('user'));
-        const userId = userData?._id || userData?.id;
+        const userData = localStorage.getItem('user');
+        if (!userData) return;
+        const user = JSON.parse(userData);
+        const userId = user._id || user.id;
 
         try {
-            const response = await fetch(`${API_URL}/api/cart/decrease`, {
-                method: 'POST',
+            const res = await fetch(`${API_URL}/api/cart/update-quantity`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, productId }),
+                body: JSON.stringify({ userId, productId, quantity: newQuantity })
             });
-
-            if (response.ok) {
-                // Cập nhật giao diện
-                setCartItems((prev) =>
-                    prev.map((item) =>
-                        item._id === productId ? { ...item, quantity: item.quantity - 1 } : item
-                    )
-                );
+            if (res.ok) {
+                const data = await res.json();
+                // QUAN TRỌNG: Phải chuẩn hóa lại dữ liệu sau khi cập nhật
+                setCartItems(formatCartData(data.products));
             }
-        } catch (error) {
-            console.error("Lỗi giảm số lượng:", error);
-        }
+        } catch (err) { console.error("Lỗi cập nhật:", err); }
     };
+
     return (
         <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, fetchCart }}>
             {children}

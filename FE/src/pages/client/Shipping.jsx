@@ -25,7 +25,7 @@ const Shipping = () => {
         };
 
         try {
-            const response = await fetch("https://my-ecommerce-web-rlmf.onrender.com/api/payment/create-order", {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create-order`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(orderPayload),
@@ -39,7 +39,7 @@ const Shipping = () => {
                     navigate('/checkout', { state: { orderData: savedOrder } });
                 } else {
                     // --- NẾU LÀ TIỀN MẶT (COD): PHẢI XÓA GIỎ NGAY TẠI ĐÂY ---
-                    const clearRes = await fetch(`https://my-ecommerce-web-rlmf.onrender.com/api/cart/clear/${userId}`, {
+                    const clearRes = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/clear/${userId}`, {
                         method: 'DELETE'
                     });
 

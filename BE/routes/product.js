@@ -11,17 +11,26 @@ const { isAdmin } = require('../middleware/authMiddleware');
 // API lấy tất cả sản phẩm từ Database
 router.get('/', async (req, res) => {
     try {
-        const products = await Product.find({}); // Lấy hết sản phẩm trong bảng products
+        const products = await Product.find({ isAvailable: { $ne: false } }).populate('category', 'name');
         res.json(products);
     } catch (err) {
-        res.status(500).json({ message: "Lỗi server: " + err.message });
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.get('/admin-all', isAdmin, async (req, res) => {
+    try {
+        const products = await Product.find({}).populate('category', 'name'); // Để trống {} là lấy sạch sành sanh
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 });
 
 // API lấy chi tiết 1 sản phẩm theo ID (dùng cho trang ProductDetail)
 router.get('/:id', async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findById(req.params.id).populate('category');
         if (product) {
             res.json(product);
         } else {
@@ -35,6 +44,8 @@ router.get('/:id', async (req, res) => {
 // ==========================================
 // 2. ADMIN ROUTES (Chỉ Admin mới có quyền)
 // ==========================================
+
+
 
 // THÊM SẢN PHẨM MỚI
 router.post('/', isAdmin, async (req, res) => {

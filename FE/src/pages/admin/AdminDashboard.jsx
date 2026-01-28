@@ -4,7 +4,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 const AdminDashboard = () => {
     // Lấy ngày hiện tại định dạng YYYY-MM-DD
-    const today = new Date().toISOString().split('T')[0];
+    //const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
 
     const [stats, setStats] = useState({ totalRevenue: 0, totalOrders: 0, totalUsers: 0 });
     const [chartData, setChartData] = useState([]);
@@ -13,7 +14,7 @@ const AdminDashboard = () => {
     const [from, setFrom] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
     const [to, setTo] = useState(today);
 
-    const API_URL = "https://my-ecommerce-web-rlmf.onrender.com";
+    const API_URL = import.meta.env.VITE_API_URL || "https://my-ecommerce-web-rlmf.onrender.com";
     const token = localStorage.getItem('token');
 
     // --- LOGIC RÀNG BUỘC NGÀY ---

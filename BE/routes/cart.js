@@ -1,36 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const Cart = require('../models/Cart');
-// Nhớ import thêm Product nếu bạn dùng populate (tùy phiên bản mongoose)
 const Product = require('../models/Product');
 
-// --- 1. LẤY GIỎ HÀNG VỀ (MỚI THÊM) ---
+// --- 1. LẤY GIỎ HÀNG ---
 router.get('/:userId', async (req, res) => {
     try {
-        // Tìm giỏ hàng của user và dùng populate để lấy chi tiết Tên, Ảnh, Giá từ bảng Product
-        const cart = await Cart.findOne({ userId: req.params.userId })
-            .populate('products.productId');
-
-        if (!cart) {
-            return res.status(200).json({ products: [] });
-        }
+        const cart = await Cart.findOne({ userId: req.params.userId }).populate('products.productId');
+        if (!cart) return res.status(200).json({ products: [] });
         res.status(200).json(cart);
-    } catch (err) {
-        console.error("Lỗi lấy giỏ hàng:", err);
-        res.status(500).json({ message: err.message });
-    }
+    } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// --- 2. THÊM VÀO GIỎ HÀNG (GIỮ NGUYÊN CODE CỦA BẠN) ---
+// --- 2. THÊM VÀO GIỎ ---
 router.post('/add', async (req, res) => {
     const { userId, productId, quantity } = req.body;
     try {
-        if (!userId || !productId) {
-            return res.status(400).json({ message: "Thiếu thông tin người dùng hoặc sản phẩm" });
-        }
-
         let cart = await Cart.findOne({ userId });
-
         if (cart) {
             const itemIndex = cart.products.findIndex(p => p.productId.toString() === productId);
             if (itemIndex > -1) {
@@ -43,46 +29,44 @@ router.post('/add', async (req, res) => {
             await Cart.create({ userId, products: [{ productId, quantity }] });
         }
         res.status(200).json({ message: "Thành công" });
-    } catch (err) {
-        console.error("Lỗi BE:", err);
-        res.status(500).json({ message: err.message });
-    }
+    } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// 1. Xóa toàn bộ một sản phẩm khỏi giỏ (Icon xọt rác)
-router.delete('/clear/:userId', async (req, res) => {
+// --- 1. XÓA 1 SẢN PHẨM CỤ THỂ ---
+router.delete('/remove/:userId/:productId', async (req, res) => {
     try {
-        const { userId } = req.params;
-        // Xóa giỏ hàng dựa trên userId
-        await Cart.deleteOne({ userId: userId });
-        res.status(200).json({ message: "Đã dọn sạch giỏ hàng COD" });
+        const { userId, productId } = req.params;
+        let cart = await Cart.findOne({ userId });
+        if (cart) {
+            // Lọc bỏ sản phẩm có ID này ra khỏi mảng products
+            cart.products = cart.products.filter(p => p.productId.toString() !== productId);
+            await cart.save();
+            const updatedCart = await Cart.findOne({ userId }).populate('products.productId');
+            res.status(200).json(updatedCart);
+        } else {
+            res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
+        }
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-// 2. Giảm số lượng đi 1 (Dấu trừ)
-router.post('/decrease', async (req, res) => {
-    const { userId, productId } = req.body;
+// --- 2. CẬP NHẬT SỐ LƯỢNG (Tăng/Giảm) ---
+router.put('/update-quantity', async (req, res) => {
+    const { userId, productId, quantity } = req.body;
     try {
         let cart = await Cart.findOne({ userId });
-        if (!cart) return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
+        if (!cart) return res.status(404).json({ message: "Không thấy giỏ hàng" });
 
         const itemIndex = cart.products.findIndex(p => p.productId.toString() === productId);
-
         if (itemIndex > -1) {
-            if (cart.products[itemIndex].quantity > 1) {
-                cart.products[itemIndex].quantity -= 1; // Giảm 1
-            } else {
-                // Nếu bằng 1 thì không giảm nữa (đúng ý bạn muốn nút trừ chỉ hoạt động khi >= 2)
-                return res.status(400).json({ message: "Số lượng tối thiểu là 1" });
-            }
+            cart.products[itemIndex].quantity = quantity; // Cập nhật số lượng mới gửi lên
             await cart.save();
-            // Lấy lại dữ liệu mới nhất kèm thông tin SP
             const updatedCart = await Cart.findOne({ userId }).populate('products.productId');
-            return res.status(200).json(updatedCart);
+            res.status(200).json(updatedCart);
+        } else {
+            res.status(404).json({ message: "Sản phẩm không có trong giỏ" });
         }
-        res.status(404).json({ message: "Sản phẩm không có trong giỏ" });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

@@ -17,7 +17,7 @@ const Checkout = () => {
         const checkInterval = setInterval(async () => {
             try {
                 // Gọi API bạn đã viết để kiểm tra trạng thái
-                const response = await fetch(`https://my-ecommerce-web-rlmf.onrender.com/api/payment/check-paymentStatus/${orderData.orderCode}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/check-paymentStatus/${orderData.orderCode}`);
                 const data = await response.json();
 
                 if (data.paymentStatus === 'paid') {
@@ -27,7 +27,7 @@ const Checkout = () => {
                     // --- THÊM LOGIC XÓA GIỎ HÀNG TẠI ĐÂY ---
                     try {
                         // 1. Gọi API xóa giỏ hàng trong Database
-                        await fetch(`https://my-ecommerce-web-rlmf.onrender.com/api/cart/clear/${orderData.userId}`, {
+                        await fetch(`${import.meta.env.VITE_API_URL}/api/cart/clear/${orderData.userId}`, {
                             method: 'DELETE',
                         });
 
