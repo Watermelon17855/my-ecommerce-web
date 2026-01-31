@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Package, Users, LogOut, Layers } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Users, LogOut, Layers, Tag } from 'lucide-react';
 
 const AdminLayout = () => {
     const navigate = useNavigate();
@@ -22,6 +22,9 @@ const AdminLayout = () => {
                     </Link>
                     <Link to="/admin/orders" className="flex items-center space-x-3 p-3 hover:bg-gray-800 rounded-xl transition-all">
                         <ShoppingCart size={20} /> <span>Đơn hàng</span>
+                    </Link>
+                    <Link to="/admin/brands" className="flex items-center space-x-3 p-3 hover:bg-gray-800 rounded-xl transition-all">
+                        <Tag size={20} /> <span>Nhãn hàng</span>
                     </Link>
                     <Link to="/admin/categories" className="flex items-center space-x-3 p-3 hover:bg-gray-800 rounded-xl transition-all">
                         <Layers size={20} /> <span>Danh mục</span>

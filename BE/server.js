@@ -8,6 +8,7 @@ const productRoutes = require('./routes/product');
 const cartRoutes = require('./routes/cart');
 const paymentRoutes = require('./routes/payment');
 const categoryRoutes = require('./routes/categoryRoutes');
+const brandRoutes = require('./routes/brandRoutes');
 
 dotenv.config();
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/brands', brandRoutes);
 
 // Kết nối MongoDB
 mongoose.connect(process.env.MONGO_URI)
