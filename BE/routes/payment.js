@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const User = require('../models/User');
 const { isAdmin } = require('../middleware/authMiddleware');
+const sendOrderNotification = require('../utils/emailHelper');
 
 // 1. API lấy các thông số tổng quát cho Dashboard
 // 1. API THỐNG KÊ TỔNG QUÁT
@@ -109,6 +110,8 @@ router.post('/create-order', async (req, res) => {
         const newOrder = await Order.create({
             userId, fullname, phone, address, items, totalAmount, orderCode, paymentMethod
         });
+        console.log("🚨 Đã tạo đơn thành công, đang gửi mail thông báo...");
+        sendOrderNotification(newOrder).catch(err => console.log("Lỗi mail:", err));
         res.status(201).json(newOrder);
     } catch (err) {
         res.status(500).json({ message: err.message });

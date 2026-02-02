@@ -72,4 +72,24 @@ router.put('/update-quantity', async (req, res) => {
     }
 });
 
+// --- 3. XÓA SẠCH GIỎ HÀNG (Dùng sau khi đặt hàng thành công) ---
+router.delete('/clear/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Tìm giỏ hàng của user và làm rỗng mảng products
+        let cart = await Cart.findOne({ userId });
+
+        if (cart) {
+            cart.products = []; // Xóa sạch các món trong mảng
+            await cart.save();
+            res.status(200).json({ message: "Giỏ hàng đã sạch bóng!" });
+        } else {
+            res.status(404).json({ message: "Không tìm thấy giỏ hàng để xóa" });
+        }
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 module.exports = router;
