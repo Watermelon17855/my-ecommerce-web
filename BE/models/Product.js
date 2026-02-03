@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
     name: { type: String, required: true },
+    originalPrice: { type: Number, required: true }, // Giá gốc ban đầu
     price: { type: Number, required: true },
     img: { type: String, required: true },
     subImages: { type: [String], default: [] },
