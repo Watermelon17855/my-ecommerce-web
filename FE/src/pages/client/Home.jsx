@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from "../../components/ProductCard";
 import CategorySidebar from "../../components/CategorySidebar";
-import { ChevronRight, Search, X } from 'lucide-react';
+import { ChevronRight, Search, X, Sparkles, Cpu, LayoutGrid } from 'lucide-react';
 import BrandBar from "../../components/BrandBar";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
@@ -16,12 +16,9 @@ const Home = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const [searchParams, setSearchParams] = useSearchParams();
+    const searchQuery = searchParams.get('q') || "";
+    const categoryFromUrl = searchParams.get('cat');
 
-    // 🔥 DÒNG QUAN TRỌNG: Khai báo 2 biến này để máy hiểu sếp đang muốn gì
-    const searchQuery = searchParams.get('q') || "";        // Lấy từ khóa ?q=...
-    const categoryFromUrl = searchParams.get('cat');      // Lấy danh mục ?cat=...
-
-    // 1. Logic bắt danh mục từ URL (Ví dụ: Nhấn "Xem tất cả" từ trang chi tiết)
     useEffect(() => {
         if (categoryFromUrl) {
             setActiveCategory(categoryFromUrl);
@@ -29,7 +26,6 @@ const Home = () => {
         }
     }, [categoryFromUrl]);
 
-    // 2. FETCH DỮ LIỆU GỐC
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -51,52 +47,59 @@ const Home = () => {
         fetchData();
     }, []);
 
-    // 3. LOGIC LỌC KÉP: Theo danh mục VÀ Từ khóa
     useEffect(() => {
         let result = products;
-
         if (activeCategory !== "all") {
             result = result.filter(p => {
                 const prodCatId = p.category?._id || p.category;
                 return prodCatId === activeCategory;
             });
         }
-
         if (searchQuery) {
             result = result.filter(p =>
                 p.name.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
-
         setFilteredProducts(result);
     }, [products, activeCategory, searchQuery]);
 
     const handleCategoryClick = (id) => {
         setActiveCategory(id);
-        // Khi nhấn tay chọn danh mục ở Sidebar, mình xóa cái ?cat trên URL cho sạch
         if (categoryFromUrl) setSearchParams({ q: searchQuery });
     };
 
     const clearSearch = () => setSearchParams({});
 
-    if (loading) return <div className="text-center py-20 font-bold animate-pulse text-2xl">Đang tải sản phẩm...</div>;
+    // 🚀 LOADING STATE (Màu xanh trên nền trắng)
+    if (loading) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+            <Cpu size={60} className="text-blue-600 animate-spin mb-4" />
+            <div className="text-gray-900 font-black animate-pulse text-2xl tracking-widest italic uppercase">
+                Đang tải dữ liệu...
+            </div>
+        </div>
+    );
 
     return (
-        <div className="bg-gray-50/30 min-h-screen">
+        // 🔥 Nền xám nhạt giúp các Card sản phẩm trắng nổi bật lên
+        <div className="bg-gray-50 min-h-screen">
             <BrandBar />
-            <div className="py-10 px-4 md:px-10 bg-gray-50/30 min-h-screen relative">
 
+            <div className="py-10 px-4 md:px-10 min-h-screen relative">
+
+                {/* NÚT MỞ SIDEBAR TRẮNG THANH LỊCH */}
                 {!isSidebarOpen && (
                     <button
                         onClick={() => setIsSidebarOpen(true)}
-                        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-blue-600 text-white p-2 rounded-r-2xl shadow-xl hover:pl-4 transition-all duration-300"
+                        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-white text-blue-600 p-3 rounded-r-2xl shadow-xl border border-gray-100 hover:pl-6 transition-all duration-300 group"
                     >
-                        <ChevronRight size={24} />
+                        <ChevronRight size={24} className="group-hover:scale-110 transition-transform" />
                     </button>
                 )}
 
                 <div className="flex flex-col md:flex-row gap-8">
-                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-full md:w-64 opacity-100' : 'w-0 opacity-0 -ml-8'}`}>
+                    {/* SIDEBAR CONTAINER */}
+                    <div className={`transition-all duration-500 ease-in-out ${isSidebarOpen ? 'w-full md:w-72 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
                         <CategorySidebar
                             categories={categories}
                             activeCategory={activeCategory}
@@ -106,38 +109,50 @@ const Home = () => {
                     </div>
 
                     <main className="flex-1 transition-all duration-500">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                            <div>
-                                <h2 className="text-3xl font-black text-gray-800 tracking-tight italic">
+                        {/* HEADER TRANG CHỦ MÀU ĐẬM TRÊN NỀN TRẮNG */}
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+                            <div className="relative">
+                                <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-10 bg-blue-600 rounded-full shadow-sm"></div>
+                                <h2 className="text-4xl font-black text-gray-900 tracking-tighter italic uppercase flex items-center gap-3">
+                                    <LayoutGrid className="text-blue-600" size={28} />
                                     {searchQuery
-                                        ? `Kết quả cho "${searchQuery}"`
+                                        ? `Kết quả: "${searchQuery}"`
                                         : (activeCategory === "all" ? "Tất cả sản phẩm" : categories.find(cat => cat._id === activeCategory)?.name)}
                                 </h2>
+                                <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.2em] mt-2 ml-1 italic">Premium Technology Store</p>
                             </div>
 
                             {searchQuery && (
                                 <button
                                     onClick={clearSearch}
-                                    className="flex items-center gap-2 bg-red-50 text-red-500 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-100 transition-all shadow-sm"
+                                    className="flex items-center gap-2 bg-red-50 text-red-500 px-6 py-3 rounded-2xl text-sm font-black hover:bg-red-500 hover:text-white transition-all shadow-sm border border-red-100"
                                 >
-                                    <X size={16} /> Xóa tìm kiếm
+                                    <X size={18} /> XÓA TÌM KIẾM
                                 </button>
                             )}
                         </div>
 
+                        {/* GRID SẢN PHẨM */}
                         {filteredProducts.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 {filteredProducts.map((product) => (
                                     <ProductCard key={product._id} product={product} />
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-24 bg-white rounded-[3rem] border-2 border-dashed border-gray-100 shadow-sm">
-                                <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Search size={32} className="text-gray-300" />
+                            // 🔍 KHI KHÔNG TÌM THẤY HÀNG (Style Clean White)
+                            <div className="text-center py-32 bg-white rounded-[3rem] border border-gray-100 shadow-sm">
+                                <div className="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-100">
+                                    <Search size={40} className="text-gray-300" />
                                 </div>
-                                <p className="text-gray-400 font-bold italic text-lg">Không tìm thấy máy sếp yêu cầu!</p>
-                                <button onClick={clearSearch} className="mt-4 text-blue-600 font-bold hover:underline">Xem tất cả sản phẩm</button>
+                                <p className="text-gray-900 font-black text-2xl italic tracking-tight mb-2 uppercase">Không tìm thấy máy sếp yêu cầu!</p>
+                                <p className="text-gray-400 font-medium text-sm">Sếp thử kiểm tra lại từ khóa hoặc danh mục khác nhé.</p>
+                                <button
+                                    onClick={clearSearch}
+                                    className="mt-8 px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl transition-all shadow-lg shadow-blue-100 uppercase text-xs tracking-widest"
+                                >
+                                    Xem tất cả sản phẩm
+                                </button>
                             </div>
                         )}
                     </main>
