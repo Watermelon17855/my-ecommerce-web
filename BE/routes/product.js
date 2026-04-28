@@ -9,9 +9,22 @@ const { isAdmin } = require('../middleware/authMiddleware');
 
 
 // API lấy tất cả sản phẩm từ Database
+// API lấy sản phẩm (Có hỗ trợ lọc theo danh mục cho tính năng So sánh)
 router.get('/', async (req, res) => {
     try {
-        const products = await Product.find({ isAvailable: { $ne: false } }).populate('category', 'name');
+        const { category } = req.query; // 1. Lấy ID danh mục từ URL (?category=xxxx)
+
+        // 2. Khởi tạo bộ lọc mặc định (Chỉ lấy hàng đang có sẵn)
+        let filter = { isAvailable: { $ne: false } };
+
+        // 3. Nếu sếp có truyền category lên, thì "siết" thêm điều kiện lọc
+        if (category && category !== 'all') {
+            filter.category = category;
+        }
+
+        // 4. Tìm kiếm trong Database với bộ lọc đã tạo
+        const products = await Product.find(filter).populate('category', 'name');
+
         res.json(products);
     } catch (err) {
         res.status(500).json({ message: err.message });

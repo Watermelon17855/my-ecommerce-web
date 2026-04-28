@@ -67,7 +67,7 @@ const ProductDetail = () => {
 
     useEffect(() => {
         if (gallery.length <= 1) return;
-        const timer = setInterval(() => { handleNext(); }, 5000);
+        const timer = setInterval(() => { handleNext(); }, 3000);
         return () => clearInterval(timer);
     }, [activeImage, gallery]);
 

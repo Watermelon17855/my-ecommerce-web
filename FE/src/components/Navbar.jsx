@@ -80,7 +80,7 @@ const Navbar = () => {
 
                     {/* Logo: Thông minh - Admin về Dashboard, Khách về Home */}
                     <Link
-                        to={isAdminPage ? "/admin" : "/"}
+                        to={isAdminPage ? "/admin" : "/home"}
                         className="flex-shrink-0 flex items-center group"
                     >
                         <div className="p-2 bg-blue-600 rounded-xl mr-2 shadow-lg shadow-blue-200 group-hover:bg-blue-700 transition-all">

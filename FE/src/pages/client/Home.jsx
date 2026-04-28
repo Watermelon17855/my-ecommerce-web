@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom'; // Thêm useNavigate
 import ProductCard from "../../components/ProductCard";
 import CategorySidebar from "../../components/CategorySidebar";
 import { ChevronRight, Search, X, Sparkles, Cpu, LayoutGrid } from 'lucide-react';
 import BrandBar from "../../components/BrandBar";
+import CompareModal from "../../components/CompareModal"; // 1. IMPORT MODAL SO SÁNH
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 const Home = () => {
+    const navigate = useNavigate(); // 2. KHỞI TẠO NAVIGATE
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState("all");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // 🚀 STATE CHO SO SÁNH
+    const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     const [searchParams, setSearchParams] = useSearchParams();
     const searchQuery = searchParams.get('q') || "";
@@ -70,7 +76,19 @@ const Home = () => {
 
     const clearSearch = () => setSearchParams({});
 
-    // 🚀 LOADING STATE (Màu xanh trên nền trắng)
+    // 🚀 LOGIC SO SÁNH: MỞ MODAL
+    const handleOpenCompare = (product) => {
+        setSelectedProduct(product);
+        setIsCompareModalOpen(true);
+    };
+
+    // 🚀 LOGIC SO SÁNH: CHUYỂN TRANG
+    const handleStartCompare = (selectedProducts) => {
+        const ids = selectedProducts.map(p => p._id).join(',');
+        setIsCompareModalOpen(false);
+        navigate(`/compare?ids=${ids}`); // Vèo tới trang ComparePage
+    };
+
     if (loading) return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-white">
             <Cpu size={60} className="text-blue-600 animate-spin mb-4" />
@@ -81,13 +99,10 @@ const Home = () => {
     );
 
     return (
-        // 🔥 Nền xám nhạt giúp các Card sản phẩm trắng nổi bật lên
         <div className="bg-gray-50 min-h-screen">
             <BrandBar />
 
             <div className="py-10 px-4 md:px-10 min-h-screen relative">
-
-                {/* NÚT MỞ SIDEBAR TRẮNG THANH LỊCH */}
                 {!isSidebarOpen && (
                     <button
                         onClick={() => setIsSidebarOpen(true)}
@@ -98,7 +113,6 @@ const Home = () => {
                 )}
 
                 <div className="flex flex-col md:flex-row gap-8">
-                    {/* SIDEBAR CONTAINER */}
                     <div className={`transition-all duration-500 ease-in-out ${isSidebarOpen ? 'w-full md:w-72 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
                         <CategorySidebar
                             categories={categories}
@@ -109,7 +123,6 @@ const Home = () => {
                     </div>
 
                     <main className="flex-1 transition-all duration-500">
-                        {/* HEADER TRANG CHỦ MÀU ĐẬM TRÊN NỀN TRẮNG */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                             <div className="relative">
                                 <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-10 bg-blue-600 rounded-full shadow-sm"></div>
@@ -132,15 +145,17 @@ const Home = () => {
                             )}
                         </div>
 
-                        {/* GRID SẢN PHẨM */}
                         {filteredProducts.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 {filteredProducts.map((product) => (
-                                    <ProductCard key={product._id} product={product} />
+                                    <ProductCard
+                                        key={product._id}
+                                        product={product}
+                                        onCompare={handleOpenCompare} // 3. TRUYỀN HÀM XUỐNG CARD
+                                    />
                                 ))}
                             </div>
                         ) : (
-                            // 🔍 KHI KHÔNG TÌM THẤY HÀNG (Style Clean White)
                             <div className="text-center py-32 bg-white rounded-[3rem] border border-gray-100 shadow-sm">
                                 <div className="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-100">
                                     <Search size={40} className="text-gray-300" />
@@ -158,6 +173,15 @@ const Home = () => {
                     </main>
                 </div>
             </div>
+
+            {/* 4. RENDER MODAL SO SÁNH KHI ĐƯỢC KÍCH HOẠT */}
+            {isCompareModalOpen && selectedProduct && (
+                <CompareModal
+                    firstProduct={selectedProduct}
+                    onClose={() => setIsCompareModalOpen(false)}
+                    onStartCompare={handleStartCompare}
+                />
+            )}
         </div>
     );
 };

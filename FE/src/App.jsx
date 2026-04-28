@@ -1,5 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+
 import Navbar from './components/Navbar';
+import AdminRoute from './components/AdminRoute';
+import AIChat from './components/AIChat';
+
 import Home from './pages/client/Home';
 import ProductDetail from './pages/client/ProductDetail';
 import { CartProvider } from './context/CartContext';
@@ -8,6 +12,9 @@ import Login from './pages/client/Login';
 import Register from './pages/client/Register';
 import Checkout from './pages/client/Checkout';
 import Shipping from './pages/client/Shipping';
+import Landing from './pages/client/Landing';
+import ComparePage from './pages/client/ComparePage';
+
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminOrders from './pages/admin/AdminOrders';
@@ -15,24 +22,19 @@ import AdminProducts from './pages/admin/AdminProducts';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminBrands from './pages/admin/AdminBrands';
-import AdminRoute from './components/AdminRoute';
 
-// --- COMPONENT PHỤ ĐỂ XỬ LÝ LOGIC HIỂN THỊ ---
+
 const AppContent = () => {
   const location = useLocation();
 
-  // Danh sách các trang KHÔNG muốn hiện Navbar (Đăng nhập, Đăng ký)
-  const hideNavbarRoutes = ['/login', '/register'];
+  // 1. Thêm "/" vào danh sách ẩn Navbar nếu sếp muốn Landing Page hiển thị toàn màn hình (Full-screen)
+  // giúp khách tập trung vào thông điệp của shop hơn.
+  const hideNavbarRoutes = ['/login', '/register', '/'];
 
-  // Kiểm tra xem path hiện tại có nằm trong danh sách ẩn không
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
 
   return (
-    // 🔥 ĐỔI: bg-[#0a0e1a] -> bg-gray-50 (Xám cực nhạt giúp các Card trắng nổi bật)
-    // 🔥 ĐỔI: text-white -> text-gray-900 (Chữ đen đậm thanh lịch)
     <div className="min-h-screen bg-gray-50 text-gray-900 selection:bg-blue-100 transition-colors duration-500">
-
-      {/* 🗑️ ĐÃ XÓA: Các khối GLOW xanh/tím để web sạch sẽ, không bị rối */}
 
       {shouldShowNavbar && <Navbar />}
 
@@ -40,11 +42,19 @@ const AppContent = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Home />} />
+
+          {/* 2. ĐẢO VỊ TRÍ: "/" bây giờ sẽ hiện Landing Page đầu tiên */}
+          <Route path="/" element={<Landing />} />
+
+          {/* 3. ĐỔI PATH: Trang danh sách sản phẩm bây giờ sẽ nằm ở /shop (hoặc /home) */}
+          <Route path="/home" element={<Home />} />
+
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/shipping" element={<Shipping />} />
+          <Route path="/landing" element={<Landing />} /> {/* Giữ lại cái này cũng được hoặc bỏ đi vì đã là / */}
+          <Route path="/compare" element={<ComparePage />} />
 
           {/* Layout Admin */}
           <Route element={<AdminRoute />}>
@@ -58,8 +68,10 @@ const AppContent = () => {
             </Route>
           </Route>
         </Routes>
-      </main>
 
+        {/* Chỉ hiện Chatbot AI khi không ở Landing Page để tránh che mất nội dung quảng cáo */}
+        {location.pathname !== '/' && <AIChat />}
+      </main>
     </div>
   );
 };
