@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(cors({
     origin: [
         'http://localhost:5173',           // Máy sếp đang code
-        'https://ten-du-an.vercel.app'      // Dán cái link Vercel sếp vừa tạo vào đây
+        'https://my-ecommerce-web-psi.vercel.app', // Vercel
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
