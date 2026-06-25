@@ -33,7 +33,7 @@ const Login = () => {
                     setTimeout(() => { navigate('/admin'); }, 1500);
                 } else {
                     notify.success("Đăng nhập thành công!", "Chào mừng bạn quay trở lại.");
-                    setTimeout(() => { navigate('/'); }, 1500);
+                    setTimeout(() => { navigate('/home'); }, 1500);
                 }
             } else {
                 notify.error("Đăng nhập thất bại", data.message || "Email hoặc mật khẩu không đúng.");

@@ -33,7 +33,7 @@ const Cart = () => {
                     <ShoppingBag size={60} className="text-gray-200" />
                 </div>
                 <h2 className="text-2xl font-black text-gray-900 italic tracking-tight">Giỏ hàng của sếp đang trống 🛒</h2>
-                <Link to="/" className="mt-6 text-blue-600 flex items-center hover:text-blue-700 font-bold transition-all uppercase text-xs tracking-widest">
+                <Link to="/home" className="mt-6 text-blue-600 flex items-center hover:text-blue-700 font-bold transition-all uppercase text-xs tracking-widest">
                     <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại chọn máy ngay
                 </Link>
             </div>
